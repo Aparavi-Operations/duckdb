@@ -5,6 +5,7 @@ set -ex
 git config --global user.email "quack@duckdb.org"
 git config --global user.name "DuckDB Admin"
 
+npm -v
 
 export TAG=''
 # for main do prereleases
