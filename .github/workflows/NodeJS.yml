@@ -13,29 +13,32 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   AWS_ACCESS_KEY_ID: ${{secrets.S3_DUCKDB_NODE_ID}}
   AWS_SECRET_ACCESS_KEY: ${{secrets.S3_DUCKDB_NODE_KEY}}
-  AWS_DEFAULT_REGION: us-east-1
+  AWS_ENDPOINT_URL: ${{ secrets.S3_DUCKDB_NODE_ENDPOINT }}
 
 jobs:
   set-up-npm:
-    name: Set up NPM
+    name: Upload to NPM
     runs-on: ubuntu-22.04
     env:
       DUCKDB_NODE_BUILD_CACHE: 0
+    permissions: # only this job has permission to upload to npm using trusted publishing
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup NPM
         shell: bash
         run: ./scripts/node_version.sh upload
         env:
           DUCKDB_NODE_BUILD_CACHE: 0  # create a standalone package
-          NODE_AUTH_TOKEN: ${{secrets.NODE_AUTH_TOKEN}}
 
   linux-nodejs:
     name: node.js Linux
