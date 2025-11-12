@@ -8,7 +8,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.0",
     "node-addon-api": "^7.0.0",
-    "node-gyp": "^9.3.0"
+    "node-gyp": "^9.4.1"
   },
   "binary": {
     "module_name": "duckdb",
