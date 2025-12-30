@@ -296,7 +296,8 @@
                 "src/duckdb/extension/json/json_serializer.cpp", 
                 "src/duckdb/extension/json/json_deserializer.cpp", 
                 "src/duckdb/extension/json/serialize_json.cpp", 
-                "src/duckdb/ub_extension_json_json_functions.cpp"
+                "src/duckdb/ub_extension_json_json_functions.cpp", 
+                "src/duckdb/extension/mimalloc/mimalloc_extension.cpp"
             ], 
             "include_dirs": [
                 "<!(node -p \"require('node-addon-api').include_dir\")", 
@@ -335,7 +336,8 @@
                 "src/duckdb/extension/icu/include", 
                 "src/duckdb/extension/icu/third_party/icu/common", 
                 "src/duckdb/extension/icu/third_party/icu/i18n", 
-                "src/duckdb/extension/json/include"
+                "src/duckdb/extension/json/include", 
+                "src/duckdb/extension/mimalloc/include"
             ], 
             "defines": [
                 "NAPI_VERSION=6", 
@@ -390,12 +392,27 @@
                     "OS==\"win\"", 
                     {
                         "defines": [
-                            "DUCKDB_BUILD_LIBRARY"
+                            "DUCKDB_BUILD_LIBRARY",
+                            "USE_MIMALLOC",
+                            "MI_MALLOC_VERSION=0",
+                            "MI_STATIC_LIB=1"
                         ], 
                         "libraries": [
                             "rstrtmgr.lib", 
-                            "bcrypt.lib"
-                        ]
+                            "bcrypt.lib",
+                            "mimalloc.lib"
+                        ],
+                        "include_dirs": [
+                            "src/duckdb/third_party/mimalloc/include",
+                            "C:/vcpkg/installed/x64-windows-static/include"
+                        ],
+                        "msvs_settings": {
+                            "VCLinkerTool": {
+                                "AdditionalLibraryDirectories": [
+                                    "C:/vcpkg/installed/x64-windows-static/lib"
+                                ]
+                            }
+                        }
                     }
                 ]
             ], 

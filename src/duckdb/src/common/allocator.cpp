@@ -6,6 +6,7 @@
 #include "duckdb/common/helper.hpp"
 
 #include <cstdint>
+#include <cstdio>
 
 #ifdef DUCKDB_DEBUG_ALLOCATION
 #include "duckdb/common/mutex.hpp"
@@ -23,6 +24,16 @@
 
 #ifdef USE_JEMALLOC
 #include "jemalloc_extension.hpp"
+#endif
+
+#ifndef USE_MIMALLOC
+#if defined(WIN32) || defined(_WIN32)
+#define USE_MIMALLOC
+#endif
+#endif
+
+#ifdef USE_MIMALLOC
+#include "mimalloc_extension.hpp"
 #endif
 
 namespace duckdb {
@@ -98,6 +109,17 @@ PrivateAllocatorData::~PrivateAllocatorData() {
 //===--------------------------------------------------------------------===//
 Allocator::Allocator()
     : Allocator(Allocator::DefaultAllocate, Allocator::DefaultFree, Allocator::DefaultReallocate, nullptr) {
+	// Log which allocator is being used
+#ifdef USE_JEMALLOC
+	fprintf(stderr, "[ALLOCATOR] Using jemalloc for memory allocation\n");
+	fflush(stderr);
+#elif defined(USE_MIMALLOC)
+	fprintf(stderr, "[ALLOCATOR] Using mimalloc for memory allocation\n");
+	fflush(stderr);
+#else
+	fprintf(stderr, "[ALLOCATOR] Using default system allocator (malloc/free)\n");
+	fflush(stderr);
+#endif
 }
 
 Allocator::Allocator(allocate_function_ptr_t allocate_function_p, free_function_ptr_t free_function_p,
@@ -172,6 +194,8 @@ data_ptr_t Allocator::ReallocateData(data_ptr_t pointer, idx_t old_size, idx_t s
 data_ptr_t Allocator::DefaultAllocate(PrivateAllocatorData *private_data, idx_t size) {
 #ifdef USE_JEMALLOC
 	return JemallocExtension::Allocate(private_data, size);
+#elif defined(USE_MIMALLOC)
+	return MimallocExtension::Allocate(private_data, size);
 #else
 	auto default_allocate_result = malloc(size);
 	if (!default_allocate_result) {
@@ -184,6 +208,8 @@ data_ptr_t Allocator::DefaultAllocate(PrivateAllocatorData *private_data, idx_t 
 void Allocator::DefaultFree(PrivateAllocatorData *private_data, data_ptr_t pointer, idx_t size) {
 #ifdef USE_JEMALLOC
 	JemallocExtension::Free(private_data, pointer, size);
+#elif defined(USE_MIMALLOC)
+	MimallocExtension::Free(private_data, pointer, size);
 #else
 	free(pointer);
 #endif
@@ -193,6 +219,8 @@ data_ptr_t Allocator::DefaultReallocate(PrivateAllocatorData *private_data, data
                                         idx_t size) {
 #ifdef USE_JEMALLOC
 	return JemallocExtension::Reallocate(private_data, pointer, old_size, size);
+#elif defined(USE_MIMALLOC)
+	return MimallocExtension::Reallocate(private_data, pointer, old_size, size);
 #else
 	return data_ptr_cast(realloc(pointer, size));
 #endif
@@ -210,12 +238,16 @@ Allocator &Allocator::DefaultAllocator() {
 void Allocator::ThreadFlush(idx_t threshold) {
 #ifdef USE_JEMALLOC
 	JemallocExtension::ThreadFlush(threshold);
+#elif defined(USE_MIMALLOC)
+	MimallocExtension::ThreadFlush(threshold);
 #endif
 }
 
 void Allocator::FlushAll() {
 #ifdef USE_JEMALLOC
 	JemallocExtension::FlushAll();
+#elif defined(USE_MIMALLOC)
+	MimallocExtension::FlushAll();
 #endif
 }
 
