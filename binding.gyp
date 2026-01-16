@@ -1,4 +1,7 @@
 {
+    "variables": {
+        "mimalloc_lib_path%": "<!(node -p \"process.env.MIMALLOC_LIB_PATH || (require('path').join(process.cwd(), 'deps', 'mimalloc', 'lib'))\")"
+    },
     "targets": [
         {
             "target_name": "<(module_name)", 
@@ -400,19 +403,11 @@
                         "libraries": [
                             "rstrtmgr.lib", 
                             "bcrypt.lib",
-                            "mimalloc.lib"
+                            "<(mimalloc_lib_path)/mimalloc.lib"
                         ],
                         "include_dirs": [
                             "src/duckdb/third_party/mimalloc/include",
-                            "C:/vcpkg/installed/x64-windows-static/include"
-                        ],
-                        "msvs_settings": {
-                            "VCLinkerTool": {
-                                "AdditionalLibraryDirectories": [
-                                    "C:/vcpkg/installed/x64-windows-static/lib"
-                                ]
-                            }
-                        }
+                        ]
                     }
                 ]
             ], 
