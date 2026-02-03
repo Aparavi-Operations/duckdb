@@ -56,7 +56,8 @@ using number::impl::DecimalQuantity;
 // Return TRUE if *a == *b.
 static inline UBool objectEquals(const UObject* a, const UObject* b) {
     // LATER: return *a == *b;
-    return *((const Measure*) a) == *((const Measure*) b);
+    // Cast to UObject& to avoid C++20 synthesized comparison operator ambiguity
+    return *((const Measure*) a) == static_cast<const UObject&>(*((const Measure*) b));
 }
 
 // Return a clone of *a.
