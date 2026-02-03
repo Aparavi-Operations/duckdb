@@ -1,7 +1,13 @@
+# DuckDB Node Bindings
+
+## Fork notice
+
+This is an internal fork of the upstream `duckdb-node` project. The only functional difference is on Windows builds: it links against the mimalloc allocator (statically) instead of the default Windows allocator. Everything else matches upstream behavior.
+
 > [!WARNING]
 > The original DuckDB <> Node.js bindings in this package are deprecated in favor of the new and shiny `@duckdb/node-api` package. Currently, the plan is to release this package `duckdb-node` for the last time for the DuckDB 1.4.x (~Fall 2025) series but *not* for the DuckDB 1.5.x series (~Early 2026) any more. Please [contact](https://duckdblabs.com/contact/) DuckDB Labs if you absolutely require updates after that.
 
-# DuckDB Node Bindings
+## Original README
 
 This package provides a Node.js API for [DuckDB](https://github.com/duckdb/duckdb), the "SQLite for Analytics". The API for this client is somewhat compliant to the SQLite Node.js client for easier transition (and transition you must eventually).
 

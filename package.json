@@ -1,8 +1,8 @@
 {
-  "name": "duckdb",
+  "name": "@aparavi-software/duckdb",
   "main": "./lib/duckdb.js",
   "types": "./lib/duckdb.d.ts",
-  "version": "0.0.2-dev5.0",
+  "version": "1.4.2-aparavi.1",
   "description": "DuckDB node.js API",
   "gypfile": true,
   "dependencies": {
@@ -16,7 +16,7 @@
     "host": "https://npm.duckdb.org/duckdb"
   },
   "scripts": {
-    "install": "node-pre-gyp install --fallback-to-build",
+    "install": "node scripts/install.js",
     "pretest": "node test/support/createdb.js",
     "test": "mocha -R spec --timeout 480000 --expose-gc",
     "test-path": "mocha -R spec --timeout 480000 --expose-gc --exclude 'test/*.ts'",

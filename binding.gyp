@@ -1,4 +1,7 @@
 {
+    "variables": {
+        "mimalloc_lib_path%": "<!(node -p \"process.env.MIMALLOC_LIB_PATH || (require('path').join(process.cwd(), 'deps', 'mimalloc', 'lib'))\")"
+    },
     "targets": [
         {
             "target_name": "<(module_name)", 
@@ -344,7 +347,8 @@
                 "src/duckdb/extension/json/json_multi_file_info.cpp", 
                 "src/duckdb/extension/json/json_enums.cpp", 
                 "src/duckdb/extension/json/json_common.cpp", 
-                "src/duckdb/ub_extension_json_json_functions.cpp", 
+                "src/duckdb/ub_extension_json_json_functions.cpp",
+                "src/duckdb/extension/mimalloc/mimalloc_extension.cpp",
                 "src/duckdb/extension/core_functions/function_list.cpp", 
                 "src/duckdb/extension/core_functions/core_functions_extension.cpp", 
                 "src/duckdb/extension/core_functions/lambda_functions.cpp", 
@@ -417,8 +421,9 @@
                 "src/duckdb/extension/icu/include", 
                 "src/duckdb/extension/icu/third_party/icu/common", 
                 "src/duckdb/extension/icu/third_party/icu/i18n", 
-                "src/duckdb/extension/json/include", 
-                "src/duckdb/extension/core_functions/include"
+                "src/duckdb/extension/json/include",
+                "src/duckdb/extension/core_functions/include",
+                "src/duckdb/extension/mimalloc/include"
             ], 
             "defines": [
                 "NAPI_VERSION=6", 
@@ -472,14 +477,21 @@
             }, 
             "conditions": [
                 [
-                    "OS==\"win\"", 
+                    "OS==\"win\"",
                     {
                         "defines": [
-                            "DUCKDB_BUILD_LIBRARY"
-                        ], 
+                            "DUCKDB_BUILD_LIBRARY",
+                            "USE_MIMALLOC",
+                            "MI_MALLOC_VERSION=0",
+                            "MI_STATIC_LIB=1"
+                        ],
                         "libraries": [
-                            "rstrtmgr.lib", 
-                            "bcrypt.lib"
+                            "rstrtmgr.lib",
+                            "bcrypt.lib",
+                            "<(mimalloc_lib_path)/mimalloc.lib"
+                        ],
+                        "include_dirs": [
+                            "src/duckdb/third_party/mimalloc/include"
                         ]
                     }
                 ]
