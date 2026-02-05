@@ -1,15 +1,10 @@
 const { spawnSync } = require("child_process");
 const path = require("path");
 
-const nodePreGyp = path.join(
-  __dirname,
-  "..",
-  "node_modules",
-  "@mapbox",
-  "node-pre-gyp",
-  "bin",
-  "node-pre-gyp"
-);
+// Use require.resolve to find node-pre-gyp, which works with all package managers
+// including pnpm which uses a different node_modules structure
+const nodePreGypDir = path.dirname(require.resolve("@mapbox/node-pre-gyp/package.json"));
+const nodePreGyp = path.join(nodePreGypDir, "bin", "node-pre-gyp");
 
 const args = ["install", "--fallback-to-build"];
 
