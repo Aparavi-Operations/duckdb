@@ -1,0 +1,244 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.4.2-4)'
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  linux-build:
+    name: Linux ${{ matrix.node }} ${{ matrix.target_arch }}
+    runs-on: ubuntu-22.04
+    needs: create-release
+    strategy:
+      matrix:
+        node: ['20', '22', '24']
+        target_arch: [x64, arm64]
+    env:
+      TARGET_ARCH: ${{ matrix.target_arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y git ninja-build make gcc-multilib g++-multilib wget libssl-dev
+
+      - name: Install cross-compiler for arm64
+        if: matrix.target_arch == 'arm64'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Setup cross-compilation
+        if: matrix.target_arch == 'arm64'
+        run: |
+          echo "CC=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build from source
+        run: npm install --build-from-source --target_arch="${{ matrix.target_arch }}"
+
+      - name: Package binary
+        run: ./node_modules/.bin/node-pre-gyp package --target_arch="${{ matrix.target_arch }}"
+
+      - name: Get binary path
+        id: binary
+        run: |
+          BINARY_PATH=$(./node_modules/.bin/node-pre-gyp reveal staged_tarball --silent --target_arch="${{ matrix.target_arch }}")
+          BINARY_NAME=$(basename $BINARY_PATH)
+          echo "path=$BINARY_PATH" >> $GITHUB_OUTPUT
+          echo "name=$BINARY_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: ${{ steps.binary.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos-arm64-build:
+    name: macOS arm64 Node ${{ matrix.node }}
+    runs-on: macos-14
+    needs: create-release
+    strategy:
+      matrix:
+        node: ['20', '22', '24']
+    env:
+      TARGET_ARCH: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build from source
+        run: npm install --build-from-source --target_arch="arm64"
+
+      - name: Package binary
+        run: ./node_modules/.bin/node-pre-gyp package --target_arch="arm64"
+
+      - name: Get binary path
+        id: binary
+        run: |
+          BINARY_PATH=$(./node_modules/.bin/node-pre-gyp reveal staged_tarball --silent --target_arch="arm64")
+          BINARY_NAME=$(basename $BINARY_PATH)
+          echo "path=$BINARY_PATH" >> $GITHUB_OUTPUT
+          echo "name=$BINARY_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: ${{ steps.binary.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos-x64-build:
+    name: macOS x64 Node ${{ matrix.node }}
+    runs-on: macos-13
+    needs: create-release
+    strategy:
+      matrix:
+        node: ['20', '22', '24']
+    env:
+      TARGET_ARCH: x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build from source
+        run: npm install --build-from-source --target_arch="x64"
+
+      - name: Package binary
+        run: ./node_modules/.bin/node-pre-gyp package --target_arch="x64"
+
+      - name: Get binary path
+        id: binary
+        run: |
+          BINARY_PATH=$(./node_modules/.bin/node-pre-gyp reveal staged_tarball --silent --target_arch="x64")
+          BINARY_NAME=$(basename $BINARY_PATH)
+          echo "path=$BINARY_PATH" >> $GITHUB_OUTPUT
+          echo "name=$BINARY_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: ${{ steps.binary.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  windows-build:
+    name: Windows Node ${{ matrix.node }}
+    runs-on: windows-latest
+    needs: create-release
+    strategy:
+      matrix:
+        node: ['20', '22', '24']
+    env:
+      npm_config_msvs_version: 2019
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install Visual Studio Build Tools
+        run: choco install visualstudio2019-workload-vctools -y
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build from source
+        run: npm install --build-from-source
+
+      - name: Package binary
+        run: ./node_modules/.bin/node-pre-gyp package
+
+      - name: Get binary path
+        id: binary
+        shell: bash
+        run: |
+          BINARY_PATH=$(./node_modules/.bin/node-pre-gyp reveal staged_tarball --silent)
+          BINARY_NAME=$(basename $BINARY_PATH)
+          echo "path=$BINARY_PATH" >> $GITHUB_OUTPUT
+          echo "name=$BINARY_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: ${{ steps.binary.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

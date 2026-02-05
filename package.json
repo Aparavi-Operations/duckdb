@@ -2,7 +2,7 @@
   "name": "@aparavi-software/duckdb",
   "main": "./lib/duckdb.js",
   "types": "./lib/duckdb.d.ts",
-  "version": "1.4.2-3",
+  "version": "1.4.2-4",
   "description": "DuckDB node.js API",
   "gypfile": true,
   "dependencies": {
@@ -13,7 +13,9 @@
   "binary": {
     "module_name": "duckdb",
     "module_path": "./lib/binding/",
-    "host": "https://npm.duckdb.org/duckdb"
+    "host": "https://github.com/Aparavi-Operations/duckdb/releases/download/",
+    "remote_path": "v{version}",
+    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
   },
   "scripts": {
     "install": "node scripts/install.js",
@@ -45,7 +47,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/duckdb/duckdb-node.git"
+    "url": "git+https://github.com/Aparavi-Operations/duckdb.git"
   },
   "ts-node": {
     "require": [
@@ -60,7 +62,7 @@
   "author": "Hannes Mühleisen",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/duckdb/duckdb-node/issues"
+    "url": "https://github.com/Aparavi-Operations/duckdb/issues"
   },
   "homepage": "https://www.duckdb.org"
 }
