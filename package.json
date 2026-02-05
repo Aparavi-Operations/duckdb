@@ -2,7 +2,7 @@
   "name": "@aparavi-software/duckdb",
   "main": "./lib/duckdb.js",
   "types": "./lib/duckdb.d.ts",
-  "version": "1.4.2-4",
+  "version": "1.4.2-5",
   "description": "DuckDB node.js API",
   "gypfile": true,
   "dependencies": {
@@ -14,8 +14,8 @@
     "module_name": "duckdb",
     "module_path": "./lib/binding/",
     "host": "https://github.com/Aparavi-Operations/duckdb/releases/download/",
-    "remote_path": "v{version}",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz"
+    "remote_path": "v1.4.2-aparavi.1",
+    "package_name": "{module_name}-v1.4.2-aparavi.1-{node_abi}-{platform}-{arch}.tar.gz"
   },
   "scripts": {
     "install": "node scripts/install.js",
