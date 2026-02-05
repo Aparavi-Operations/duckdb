@@ -2,7 +2,7 @@
   "name": "@aparavi-software/duckdb",
   "main": "./lib/duckdb.js",
   "types": "./lib/duckdb.d.ts",
-  "version": "1.4.2-2",
+  "version": "1.4.2-3",
   "description": "DuckDB node.js API",
   "gypfile": true,
   "dependencies": {
